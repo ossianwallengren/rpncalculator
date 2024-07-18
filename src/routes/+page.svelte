@@ -1,53 +1,95 @@
 <script lang="ts">
-    import { invoke } from "@tauri-apps/api/tauri";
+    let stack: number[] = [];
+    let current: number | null = null;
 
-    let name = "";
-    let greetMsg = "";
+    function click(this: HTMLButtonElement) {
+        let t = this.textContent;
+        if (!t) return;
+        if ("0123456789".includes(t)) {
+            current = (current ?? 0) * 10 + +t;
+        } else if (t === "<") {
+            current = Math.floor((current ?? 0) / 10);
+            if (current === 0) current = null;
+        } else if (t === "v") {
+            if (current !== null) stack = [...stack, current ?? 0];
+            current = null;
+        } else if (t === "+" || t === "-" || t === "*" || t === "/") {
+            binop(t);
+        }
+    }
 
-    async function greet() {
-        // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
-        greetMsg = await invoke("greet", { name });
+    function binop(op: "+" | "-" | "*" | "/") {
+        if (current === null) {
+            let val = stack.at(-1);
+            if (!val) {
+                return;
+            }
+            current = val;
+            stack = stack.slice(0, stack.length - 1);
+        }
+        let lhs = stack.at(-1);
+        if (!lhs) return;
+        stack = stack.slice(0, stack.length - 1);
+        let rhs = current;
+        switch (op) {
+            case "+":
+                current = lhs + rhs;
+                break;
+            case "-":
+                current = lhs - rhs;
+                break;
+            case "*":
+                current = lhs * rhs;
+                break;
+            case "/":
+                current = lhs / rhs;
+                break;
+        }
     }
 </script>
 
 <div class="container">
-    <h1>Welcome to Tauri!</h1>
-
-    <div class="row">
-        <a href="https://vitejs.dev" target="_blank">
-            <img src="/vite.svg" class="logo vite" alt="Vite Logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank">
-            <img src="/tauri.svg" class="logo tauri" alt="Tauri Logo" />
-        </a>
-        <a href="https://kit.svelte.dev" target="_blank">
-            <img src="/svelte.svg" class="logo svelte-kit" alt="SvelteKit Logo" />
-        </a>
+    <div style="grid-area: val;" class="val">
+        <div class="stack">
+            {#each stack as val}
+                <p>{val}</p>
+            {/each}
+        </div>
+        <p class="current">{current ?? ""}</p>
     </div>
 
-    <p>Click on the Tauri, Vite, and SvelteKit logos to learn more.</p>
+    <div style="grid-area: fil" class="fill"></div>
 
-    <form class="row" on:submit|preventDefault={greet}>
-        <input id="greet-input" placeholder="Enter a name..." bind:value={name} />
-        <button type="submit">Greet</button>
-    </form>
+    <button on:click={click} style="grid-area: sev" class="num">7</button>
+    <button on:click={click} style="grid-area: eit" class="num">8</button>
+    <button on:click={click} style="grid-area: nin" class="num">9</button>
+    <button on:click={click} style="grid-area: for" class="num">4</button>
+    <button on:click={click} style="grid-area: fiv" class="num">5</button>
+    <button on:click={click} style="grid-area: six" class="num">6</button>
+    <button on:click={click} style="grid-area: one" class="num">1</button>
+    <button on:click={click} style="grid-area: two" class="num">2</button>
+    <button on:click={click} style="grid-area: tre" class="num">3</button>
+    <button on:click={click} style="grid-area: zer" class="num">0</button>
+    <button on:click={click} style="grid-area: dot" class="num">.</button>
 
-    <p>{greetMsg}</p>
+    <button on:click={click} style="grid-area: bsp" class="mv">&lt;</button>
+    <button on:click={click} style="grid-area: psh" class="mv">v</button>
+
+    <button on:click={click} style="grid-area: div" class="op">/</button>
+    <button on:click={click} style="grid-area: mul" class="op">*</button>
+    <button on:click={click} style="grid-area: sub" class="op">-</button>
+    <button on:click={click} style="grid-area: add" class="op">+</button>
 </div>
 
 <style>
-    .logo.vite:hover {
-        filter: drop-shadow(0 0 2em #747bff);
+    :global(*) {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
     }
-
-    .logo.svelte-kit:hover {
-        filter: drop-shadow(0 0 2em #ff3e00);
-    }
-
     :root {
         font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
         font-size: 16px;
-        line-height: 24px;
         font-weight: 400;
 
         color: #0f0f0f;
@@ -60,97 +102,68 @@
         -webkit-text-size-adjust: 100%;
     }
 
-    .container {
-        margin: 0;
-        padding-top: 10vh;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        text-align: center;
-    }
-
-    .logo {
-        height: 6em;
-        padding: 1.5em;
-        will-change: filter;
-        transition: 0.75s;
-    }
-
-    .logo.tauri:hover {
-        filter: drop-shadow(0 0 2em #24c8db);
-    }
-
-    .row {
-        display: flex;
-        justify-content: center;
-    }
-
-    a {
-        font-weight: 500;
-        color: #646cff;
-        text-decoration: inherit;
-    }
-
-    a:hover {
-        color: #535bf2;
-    }
-
-    h1 {
-        text-align: center;
-    }
-
-    input,
     button {
-        border-radius: 8px;
-        border: 1px solid transparent;
-        padding: 0.6em 1.2em;
-        font-size: 1em;
-        font-weight: 500;
-        font-family: inherit;
-        color: #0f0f0f;
-        background-color: #ffffff;
-        transition: border-color 0.25s;
-        box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
+        border: none;
     }
 
-    button {
-        cursor: pointer;
-    }
-
-    button:hover {
-        border-color: #396cd8;
-    }
     button:active {
-        border-color: #396cd8;
-        background-color: #e8e8e8;
+        filter: brightness(80%);
     }
 
-    input,
-    button {
-        outline: none;
+    .mv {
+        background-color: #da8070;
     }
 
-    #greet-input {
-        margin-right: 5px;
+    .op {
+        background-color: #a090ef;
+    }
+
+    .num {
+        background-color: #f6f6f6;
+    }
+
+    .val {
+        background-color: #ffffff;
+        display: flex;
+        align-items: start;
+        flex-direction: column;
+        overflow-x: auto;
+        padding: 0.5em;
+    }
+
+    .stack {
+        display: flex;
+        gap: 1em;
+    }
+
+    .current {
+        font-size: 48px;
+    }
+
+    .fill {
+        background-color: #f6f6f6;
+    }
+
+    .container {
+        min-height: 100vh;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        grid-template-rows: repeat(6, 1fr);
+        grid-template-areas:
+            "val val val val"
+            "bsp fil fil fil"
+            "sev eit nin div"
+            "for fiv six mul"
+            "one two tre sub"
+            "zer dot psh add";
+        gap: 1px;
+        background-color: #545454;
     }
 
     @media (prefers-color-scheme: dark) {
         :root {
             color: #f6f6f6;
             background-color: #2f2f2f;
-        }
-
-        a:hover {
-            color: #24c8db;
-        }
-
-        input,
-        button {
-            color: #ffffff;
-            background-color: #0f0f0f98;
-        }
-        button:active {
-            background-color: #0f0f0f69;
         }
     }
 </style>
