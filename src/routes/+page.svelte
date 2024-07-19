@@ -2,25 +2,91 @@
     let stack: number[] = [];
     let current: number | null = null;
 
-    function click(this: HTMLButtonElement) {
-        let t = this.textContent;
-        if (!t) return;
-        if ("0123456789".includes(t)) {
-            current = (current ?? 0) * 10 + +t;
-        } else if (t === "<") {
+    let currentlyDown: Action | null = null;
+
+    let buttons = {
+        num: {
+            sev: "7",
+            eit: "8",
+            nin: "9",
+            for: "4",
+            fiv: "5",
+            six: "6",
+            one: "1",
+            two: "2",
+            tre: "3",
+            zer: "0",
+            dot: ".",
+        },
+
+        mv: {
+            bsp: "<",
+            clr: "AC",
+            psh: "v",
+        },
+
+        op: {
+            div: "/",
+            mul: "*",
+            sub: "-",
+            add: "+",
+        },
+    };
+
+    type InnerKeys<T> = T extends object ? keyof T : never;
+    type Action = InnerKeys<(typeof buttons)[keyof typeof buttons]>;
+    type ActionIn<T extends keyof typeof buttons> = keyof (typeof buttons)[T];
+
+    function asAction(a: string): Action {
+        if (Object.values(buttons).flatMap(Object.keys).includes(a))
+            return a as Action;
+        throw new Error(`${a} is not a valid action`);
+    }
+
+    let codeKeymap = new Map<string, Action>();
+    for (let [id, d] of Object.entries(buttons.num)) {
+        if (id === "dot") continue;
+        codeKeymap.set(`Digit${d}`, id as ActionIn<"num">);
+        codeKeymap.set(`Numpad${d}`, id as ActionIn<"num">);
+    }
+    let keyKeymap = new Map<string, Action>();
+    keyKeymap.set("Backspace", "bsp");
+    keyKeymap.set("Escape", "clr");
+    keyKeymap.set(" ", "psh");
+    keyKeymap.set("Enter", "psh");
+    for (let [id, op] of Object.entries(buttons.op)) {
+        keyKeymap.set(op, id as ActionIn<"num">);
+    }
+
+    window.onkeydown = (event) => {
+        let t = codeKeymap.get(event.code) ?? keyKeymap.get(event.key);
+        if (t === undefined) return;
+        action(t);
+        currentlyDown = t;
+    };
+
+    window.onkeyup = () => {
+        currentlyDown = null;
+    };
+
+    function action(a: Action) {
+        if (a in buttons.num) {
+            let x = buttons.num[a as keyof typeof buttons.num];
+            current = (current ?? 0) * 10 + +x;
+        } else if (a === "bsp") {
             current = Math.floor((current ?? 0) / 10);
             if (current === 0) current = null;
-        } else if (t === "v") {
+        } else if (a === "psh") {
             if (current !== null) stack = [...stack, current ?? 0];
             current = null;
-        } else if (t === "AC") {
+        } else if (a === "clr") {
             current = null;
-        } else if (t === "+" || t === "-" || t === "*" || t === "/") {
-            binop(t);
+        } else if (a === "add" || a === "sub" || a === "mul" || a === "div") {
+            binop(a);
         }
     }
 
-    function binop(op: "+" | "-" | "*" | "/") {
+    function binop(op: ActionIn<"op">) {
         if (current === null) {
             let val = stack.at(-1);
             if (!val) {
@@ -34,16 +100,16 @@
         stack = stack.slice(0, stack.length - 1);
         let rhs = current;
         switch (op) {
-            case "+":
+            case "add":
                 current = lhs + rhs;
                 break;
-            case "-":
+            case "sub":
                 current = lhs - rhs;
                 break;
-            case "*":
+            case "mul":
                 current = lhs * rhs;
                 break;
-            case "/":
+            case "div":
                 current = lhs / rhs;
                 break;
         }
@@ -62,26 +128,16 @@
 
     <div style="grid-area: fil" class="fill"></div>
 
-    <button on:click={click} style="grid-area: sev" class="num">7</button>
-    <button on:click={click} style="grid-area: eit" class="num">8</button>
-    <button on:click={click} style="grid-area: nin" class="num">9</button>
-    <button on:click={click} style="grid-area: for" class="num">4</button>
-    <button on:click={click} style="grid-area: fiv" class="num">5</button>
-    <button on:click={click} style="grid-area: six" class="num">6</button>
-    <button on:click={click} style="grid-area: one" class="num">1</button>
-    <button on:click={click} style="grid-area: two" class="num">2</button>
-    <button on:click={click} style="grid-area: tre" class="num">3</button>
-    <button on:click={click} style="grid-area: zer" class="num">0</button>
-    <button on:click={click} style="grid-area: dot" class="num">.</button>
-
-    <button on:click={click} style="grid-area: bsp" class="mv">&lt;</button>
-    <button on:click={click} style="grid-area: clr" class="mv">AC</button>
-    <button on:click={click} style="grid-area: psh" class="mv">v</button>
-
-    <button on:click={click} style="grid-area: div" class="op">/</button>
-    <button on:click={click} style="grid-area: mul" class="op">*</button>
-    <button on:click={click} style="grid-area: sub" class="op">-</button>
-    <button on:click={click} style="grid-area: add" class="op">+</button>
+    {#each Object.entries(buttons) as [class_, btns]}
+        {#each Object.entries(btns) as [id, content]}
+            <button
+                class:active={currentlyDown === id}
+                on:click={() => action(asAction(id))}
+                style={`grid-area: ${id}`}
+                class={class_}>{content}</button
+            >
+        {/each}
+    {/each}
 </div>
 
 <style>
@@ -89,7 +145,8 @@
         border: none;
     }
 
-    button:active {
+    button:active,
+    button.active {
         filter: brightness(80%);
     }
 
@@ -144,7 +201,8 @@
     }
 
     @media (prefers-color-scheme: dark) {
-        button:active {
+        button:active,
+        button.active {
             filter: brightness(150%);
         }
 
@@ -156,7 +214,8 @@
             background-color: #452fb3;
         }
 
-        .num, .fill {
+        .num,
+        .fill {
             background-color: #444;
         }
 
