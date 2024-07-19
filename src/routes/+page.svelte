@@ -13,6 +13,8 @@
         } else if (t === "v") {
             if (current !== null) stack = [...stack, current ?? 0];
             current = null;
+        } else if (t === "AC") {
+            current = null;
         } else if (t === "+" || t === "-" || t === "*" || t === "/") {
             binop(t);
         }
@@ -73,6 +75,7 @@
     <button on:click={click} style="grid-area: dot" class="num">.</button>
 
     <button on:click={click} style="grid-area: bsp" class="mv">&lt;</button>
+    <button on:click={click} style="grid-area: clr" class="mv">AC</button>
     <button on:click={click} style="grid-area: psh" class="mv">v</button>
 
     <button on:click={click} style="grid-area: div" class="op">/</button>
@@ -131,7 +134,7 @@
         grid-template-rows: repeat(6, 1fr);
         grid-template-areas:
             "val val val val"
-            "bsp fil fil fil"
+            "bsp clr fil fil"
             "sev eit nin div"
             "for fiv six mul"
             "one two tre sub"
