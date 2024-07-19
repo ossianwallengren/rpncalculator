@@ -82,26 +82,6 @@
 </div>
 
 <style>
-    :global(*) {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-    }
-    :root {
-        font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
-        font-size: 16px;
-        font-weight: 400;
-
-        color: #0f0f0f;
-        background-color: #f6f6f6;
-
-        font-synthesis: none;
-        text-rendering: optimizeLegibility;
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-        -webkit-text-size-adjust: 100%;
-    }
-
     button {
         border: none;
     }
@@ -161,9 +141,28 @@
     }
 
     @media (prefers-color-scheme: dark) {
-        :root {
-            color: #f6f6f6;
-            background-color: #2f2f2f;
+        button:active {
+            filter: brightness(150%);
+        }
+
+        .mv {
+            background-color: #a73825;
+        }
+
+        .op {
+            background-color: #452fb3;
+        }
+
+        .num, .fill {
+            background-color: #444;
+        }
+
+        .val {
+            background-color: #222;
+        }
+
+        .container {
+            background-color: #777;
         }
     }
 </style>
