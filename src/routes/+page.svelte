@@ -1,6 +1,6 @@
 <script lang="ts">
-    let stack: number[] = [];
-    let current: number | null = null;
+    let stack: bigint[] = [];
+    let current: bigint | null = null;
 
     let currentlyDown: Action | null = null;
 
@@ -59,7 +59,7 @@
     }
 
     window.onkeydown = (event) => {
-        let t = codeKeymap.get(event.code) ?? keyKeymap.get(event.key);
+        let t = keyKeymap.get(event.key) ?? codeKeymap.get(event.code);
         if (t === undefined) return;
         action(t);
         currentlyDown = t;
@@ -72,14 +72,14 @@
     function action(a: Action) {
         if (a in buttons.num) {
             let x = buttons.num[a as keyof typeof buttons.num];
-            current = (current ?? 0) * 10 + +x;
+            current = (current ?? 0n) * 10n + BigInt(x);
         } else if (a === "bsp") {
             if (current === null) {
                 current = stack.at(-1) ?? null;
                 stack = [...stack.slice(0, stack.length - 1)];
             } else {
-                current = Math.floor((current ?? 0) / 10);
-                if (current === 0) current = null;
+                current = (current ?? 0n) / 10n;
+                if (current === 0n) current = null;
             }
         } else if (a === "psh") {
             if (current !== null) stack = [...stack, current ?? 0];
