@@ -74,8 +74,13 @@
             let x = buttons.num[a as keyof typeof buttons.num];
             current = (current ?? 0) * 10 + +x;
         } else if (a === "bsp") {
-            current = Math.floor((current ?? 0) / 10);
-            if (current === 0) current = null;
+            if (current === null) {
+                current = stack.at(-1) ?? null;
+                stack = [...stack.slice(0, stack.length - 1)];
+            } else {
+                current = Math.floor((current ?? 0) / 10);
+                if (current === 0) current = null;
+            }
         } else if (a === "psh") {
             if (current !== null) stack = [...stack, current ?? 0];
             current = null;
