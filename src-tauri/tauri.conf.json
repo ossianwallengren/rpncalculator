@@ -19,9 +19,9 @@
     },
     "windows": [
       {
-        "title": "rpncalculator",
-        "width": 800,
-        "height": 600
+        "title": "RPN Calculator",
+        "width": 403,
+        "height": 605
       }
     ],
     "security": {
